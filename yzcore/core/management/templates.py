@@ -143,30 +143,30 @@ class TemplateCommand(BaseCommand):
                 an=a_or_an,
                 app=app_or_project,
             ))
-        # Check it's a valid directory name.
-        if not name.isidentifier():
-            raise CommandError(
-                "'{name}' is not a valid {app} name. Please make sure the "
-                "name is a valid identifier.".format(
-                    name=name,
-                    app=app_or_project,
-                )
-            )
-        # Check it cannot be imported.
-        try:
-            import_module(name)
-        except ImportError:
-            pass
-        else:
-            raise CommandError(
-                "'{name}' conflicts with the name of an existing Python "
-                "module and cannot be used as {an} {app} name. Please try "
-                "another name.".format(
-                    name=name,
-                    an=a_or_an,
-                    app=app_or_project,
-                )
-            )
+        # # Check it's a valid directory name.
+        # if not name.isidentifier():
+        #     raise CommandError(
+        #         "'{name}' is not a valid {app} name. Please make sure the "
+        #         "name is a valid identifier.".format(
+        #             name=name,
+        #             app=app_or_project,
+        #         )
+        #     )
+        # # Check it cannot be imported.
+        # try:
+        #     import_module(name)
+        # except ImportError:
+        #     pass
+        # else:
+        #     raise CommandError(
+        #         "'{name}' conflicts with the name of an existing Python "
+        #         "module and cannot be used as {an} {app} name. Please try "
+        #         "another name.".format(
+        #             name=name,
+        #             an=a_or_an,
+        #             app=app_or_project,
+        #         )
+        #     )
 
     def make_writeable(self, filename):
         """
