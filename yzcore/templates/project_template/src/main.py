@@ -7,7 +7,8 @@
 """
 from fastapi import FastAPI
 from src.settings import settings
-from src.app import views as hello_views
+from src.apps.myapp import views as hello_views
+# from src.app import views as hello_views
 
 # from src.apps import node
 app = FastAPI(

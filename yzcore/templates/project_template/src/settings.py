@@ -8,7 +8,7 @@
 import os
 import configparser
 from pydantic import Field
-from .core.default_settings import DefaultSetting
+from yzcore.default_settings import DefaultSetting
 
 conf = configparser.ConfigParser()
 base_path = os.path.dirname(__file__)

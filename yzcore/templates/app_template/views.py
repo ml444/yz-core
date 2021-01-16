@@ -7,63 +7,82 @@
 """
 from fastapi import APIRouter,HTTPException
 from fastapi import Query,Body
-from src.core.response import response
-from src.core.logger import get_logger
-from .schemas import TransformRequestBody
-from src.core.exceptions import CreateObjectFailed
+from yzcore.core.response import response
+from yzcore.logger import get_logger
+from yzcore.exceptions import CreateObjectFailed, UpdateObjectFailed
+from .schemas import PermissionBase
+
 
 logger = get_logger(__name__)
 logger.debug('test_debug')
-logger.info('test_info')
-logger.warn('test_warn')
-logger.error('test_error')
-logger.critical('test_critical')
 
 
 router = APIRouter()
 
 
-@router.get('/hello/')
-def hello_world(query: str = Query('world')):
+@router.get('/resources/{resource_id}')
+def view_get_info(resource_id: int):
     """
+    GET 示例
 
-    :param query:
-    :return:
+        :param resource_id:
+        :return:
     """
-    # _s = f"hello, {query}"
-    # data = {'welcome': _s}
-    # data = """<html><a>this is A tag</a></html>"""
-    data = """<?xml version="1.0"?>
-        <shampoo>
-        <Header>
-            Apply shampoo here.
-        </Header>
-        <Body>
-            You'll have to use soap here.
-        </Body>
-        </shampoo>
-        """
-    return response(content=data, mtype='xml')
+    raise HTTPException(status_code=404, detail='找不到对象')
 
 
-@router.post("/cloud/")
-def test_cloud(
-        job_uid: str = Query(...)
+@router.get('/resources/')
+def view_list_resources(
+        query: str = Query('keyword'),
+        limit: int = Query(10, gt=0, le=1000),
+        offset: int = Query(0, ge=0),
 ):
-    """"""
-    raise HTTPException(status_code=404, detail='最终啊不得')
+    """
+    GET 列表查询示例
+
+        :param query:
+        :param limit:
+        :param offset:
+        :return:
+    """
+
+
+@router.post("/resources/")
+def view_create_resources(
+        body: PermissionBase
+):
+    """
+    POST 示例
+
+        :param body:
+        :return:
+    """
     raise CreateObjectFailed()
-    from random import choice
-    results = ['SUCCESS', 'FAILURE', 'FAILURE', 'FAILURE']
-    print(job_uid)
-    return {'data': 'hello world', 'status': choice(results)}
 
 
-# @router.post("/cloud/")
-# def test_cloud(
-#         body: TransformRequestBody
-#         body: dict = Body()
-# ):
-#     """"""
-#     print(body.dict())
-#     return
+@router.put("/resources/{resource_id}")
+def view_update_resources(
+        resource_id: int,
+        body: PermissionBase
+):
+    """
+    PUT 全量更新示例
+
+        :param body:
+        :return:
+    """
+    raise UpdateObjectFailed()
+
+
+@router.patch("/resources/{resource_id}")
+def view_update_resources(
+        resource_id: int,
+        body: PermissionBase
+):
+    """
+    PATCH 局部更新示例
+
+        :param body:
+        :return:
+    """
+    raise UpdateObjectFailed()
