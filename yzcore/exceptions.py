@@ -22,12 +22,12 @@ class MultiObjects(HTTPException):
 
 
 class CreateObjectFailed(HTTPException):
-    def __init__(self, detail: Any = 'Fail to create object', headers: dict = None):
+    def __init__(self, detail: Any = 'Object create failed', headers: dict = None):
         super().__init__(status_code=400, detail=detail, headers=headers)
 
 
 class UpdateObjectFailed(HTTPException):
-    def __init__(self, detail: Any = 'Fail to update with object', headers: dict = None):
+    def __init__(self, detail: Any = 'Object update failed', headers: dict = None):
         super().__init__(status_code=400, detail=detail, headers=headers)
 
 
