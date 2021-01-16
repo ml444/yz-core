@@ -1,13 +1,18 @@
 -i https://mirrors.aliyun.com/pypi/simple
-fastapi==0.63.0
-sqlalchemy==1.3.19
-uvicorn==0.13.3
-orjson==3.3.1
+
+yzcore
 
 
-# extensions模块需要的依赖包
-# oss2==2.13.0
+# #db模块需要的依赖包
+# alembic>=1.4.3
+# sqlalchemy>=1.3.19
+# psycopg2-binary>=2.8.6
+# pymongo>=3.11.0
 
-# 测试模块需要用到的依赖包
+# #extensions模块需要的依赖包
+# oss2>=2.13.0
+# aiohttp>=3.6.2
+
+# #测试模块需要用到的依赖包
 # pytest==6.1.1
 # aioresponses==0.7.0
