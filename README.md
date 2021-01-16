@@ -4,26 +4,47 @@
 
 ## Introduction
 
-Introduction 部分用于阐述项目基本情况和功能（是什么，用来做什么的）。
-
+yzcore 目的为了开发后端服务时，提供一种代码结构规范参考。
+可以通过`startproject`和`startapp`两个命令快速创建工程和内部的接口应用模块。
+**安装模块**
+```shell
+$ pip install yzcore
+```
+示例：
+- 创建工程：
+```shell
+$ python3 -m yzcore startproject myproject
+```
+- 创建工程内部应用：
+```shell
+$ python3 -m yzcore startapp myapp ./src/apps/
+```
 
 代码结构介绍：
 ```
 .
-├── docs		说明文档、接口文档等文档的存放目录
-├── migrations		数据表迁移文件存放目录
+├── docs		        说明文档、接口文档等文档的存放目录
+├── migrations		    数据表迁移文件存放目录
 ├── src
-│   ├── app		应用程序主代码的目录
-│   │   ├── controllers 控制层：封装数据交互操作
-│   │   ├── models	模型层：实现数据表与模型的定义
-│   │   └── views	视图层：接口定义层
+│   ├── apps 接口应用程序的主目录
+│   │   ├── __init__.py
+│   │   ├── myapp01
+│   │   │   ├── __init__.py
+│   │   │   ├── controllers.py  控制层：封装数据交互操作
+│   │   │   ├── models.py       模型层：实现数据表与模型的定义
+│   │   │   ├── schemas.py      模式层：定义接口数据参数
+│   │   │   ├── tests.py        测试文件
+│   │   │   └── views.py        视图层：接口定义层
+│   │   └── myapp02
 │   ├── conf		配置文件的存放目录
 │   ├── const		公共常量存放目录
-│   ├── core		核心代码的存放目录
+│   ├── tests		测试文件的存放目录
 │   ├── main.py		程序的入口文件
 │   ├── settings.py	程序的设置文件
 │   └── utils		抽离出的公共代码模块存放目录
-└── tests		测试文件的存放目录
+├── .gitignore
+├── requirements.txt
+└── README.md
 ```
 
 ## Quick start
@@ -37,8 +58,10 @@ Documentation 部分是核心的文档，对于大型项目可以使用超链接
 
 For the full story, head over to the [documentation](https://git.k8s.io/community/contributors/devel#readme).
 
-## 迁移
+## 数据库迁移操作
 ```
+# pip install alembic
+
 alembic init migrations                             # 创建迁移环境
 alembic revision --autogenerate -m "commit content" # 自动生成迁移文件
 alembic upgrade head                                # 升级到最近版本
