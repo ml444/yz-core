@@ -5,15 +5,16 @@
 @date: 2020-9-13
 @desc: ...
 """
+import os
 from pydantic import Field
 from yzcore.default_settings import DefaultSetting, get_configer
 
 
 # yaml格式解析器
-# conf = get_configer('yaml')
+# conf = get_configer('yaml', import_path=os.path.dirname(__file__))
 
 # ini格式解析器
-conf = get_configer('ini')
+conf = get_configer('ini', import_path=os.path.dirname(__file__))
 
 
 class Settings(DefaultSetting):
@@ -25,6 +26,7 @@ class Settings(DefaultSetting):
 
     # postgres数据库的URI
     DB_URI: str = Field(None, env="DB_URI")
+    src_path: str = os.path.abspath(os.path.dirname(__file__))  # 代码绝对路径
 
 
 settings = Settings()
