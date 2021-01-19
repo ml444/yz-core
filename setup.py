@@ -1,10 +1,5 @@
 #!/usr/bin/python3.7+
 # -*- coding:utf-8 -*-
-"""
-@auth: cml
-@date: 2020-9-
-@desc: ...
-"""
 import setuptools
 
 with open("README.md", "r", encoding="utf-8") as fh:
@@ -12,7 +7,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setuptools.setup(
     name="yzcore",  # Replace with your own username
-    version="0.0.8",
+    version="0.0.9",
     author="cml",
     author_email="fu477521@163.com",
     description="An ID generator for distributed microservices",
