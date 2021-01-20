@@ -40,12 +40,12 @@ class ValuesSortDict(dict):
         else:
             raise ValueError('This is not the value I want.')
 
-    def get_one(self, key, index=0, default=None):
-        _values = self.__getitem__(key)
-
-        if val == []:
-            return default
-        return val
+    # def get_one(self, key, index=0, default=None):
+    #     _values = self.__getitem__(key)
+    #
+    #     if val == []:
+    #         return default
+    #     return val
 
     def add(self, key, value: tuple):
         """
@@ -101,10 +101,16 @@ class ValuesSortDict(dict):
             for i, _v in enumerate(_values):
                 if _v[0] == v:
                     _v = _values.pop(i)
-                    _values.insert(
-                        i,
-                        (_v[0], _v[1]+inc,
-                         *[__v for i, __v in enumerate(_v) if i not in [0, 1]])
+                    self.__setitem__(
+                        key,
+                        self._sort_values(
+                            (
+                                _v[0],
+                                _v[1]+inc,
+                                *[__v for i, __v in enumerate(_v) if i not in [0, 1]]
+                            ),
+                            _values
+                        )
                     )
                     return
             # 如果遍历结束还未返回，报错处理
@@ -122,7 +128,6 @@ class ValuesSortDict(dict):
                 _values))
         else:
             raise ValueError(f'The value:[{v}] is error')
-
 
 
 if __name__ == '__main__':
