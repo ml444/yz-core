@@ -6,5 +6,5 @@
 @desc: ...
 
 """
-from .aio_http import AioHTTP
+from .aio_http import AioHTTP, request
 

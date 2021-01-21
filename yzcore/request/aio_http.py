@@ -15,6 +15,7 @@
 参考：https://github.com/raphaelauv/fastAPI-aiohttp-example
 """
 import asyncio
+from concurrent import futures
 from socket import AF_INET
 from typing import TypeVar, Union, Optional, List, Dict, AnyStr
 
@@ -119,8 +120,8 @@ class AioHTTP:
     @classmethod
     async def fetch(
             cls, method: str, url: str,
-            params=None, data=None,
-            json=None, headers=None, timeout=30, **kwargs
+            params=None, data=None, json=None, headers=None, timeout=30,
+            is_close_sesion: bool=False, **kwargs
     ):
         """
         公共请求调用方法
@@ -132,6 +133,7 @@ class AioHTTP:
         :param json:    请求的Json参数
         :param headers: 请求头参数
         :param timeout: 超时时间
+        :param is_close_sesion: 是否关闭Session
         :return:
         """
         client_session = cls.get_session()
@@ -148,12 +150,13 @@ class AioHTTP:
                         **kwargs
                 ) as response:
                     result = await response.json()
-                # await cls.session.close()
             except Exception as e:
                 import traceback
                 traceback.print_exc()
                 return {'detail': e}, 500
             else:
+                if is_close_sesion:
+                    await cls.session.close()
                 return result, response.status
 
     @classmethod
@@ -195,4 +198,19 @@ class AioHTTP:
         await cls.close()
 
 
+def request(method: str, url: str, params=None, data=None,
+                json=None, headers=None, timeout=30):
+    # _func = getattr(AioHTTP, method.lower())
+    loop = asyncio.get_event_loop()
 
+    result = loop.run_until_complete(
+        AioHTTP.fetch(
+            method, url, params, data, json, headers, timeout,
+            is_close_sesion=True)
+    )
+    return result
+
+
+if __name__ == '__main__':
+    resp = request('get', 'http://httpbin.org/get')
+    print(111, resp)
