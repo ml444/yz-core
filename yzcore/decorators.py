@@ -5,10 +5,9 @@
 @date: 2020-9-22
 @desc: 权限验证的装饰器模块
 """
-# from yzcore.core.request import get_request
+from yzcore.request import request
 from yzcore.exceptions import NoPermission
 
-request = get_request()
 
 PERMISSION_URL = 'http://localhost:9001/api/permission/'
 
@@ -39,13 +38,25 @@ class CheckPermission:
         )
         # 发送请求验证
         url = PERMISSION_URL
-        response, status = request.get(url, json=data)
+        response, status = request('get', url, json=data)
         # 判断结果
         if status == 200:
             _permission = response.get('permission')
             if permission >= _permission:
                 return True
         return False
+
+
+def singleton(cls, *args, **kwargs):
+    """构造一个单例的装饰器"""
+    instance = {}
+
+    def __singleton(*args, **kwargs):
+        if cls not in instance:
+            instance[cls] = cls(*args, **kwargs)
+        return instance[cls]
+
+    return __singleton
 
 
 if __name__ == '__main__':
