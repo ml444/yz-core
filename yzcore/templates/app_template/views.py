@@ -7,7 +7,7 @@
 """
 from fastapi import APIRouter,HTTPException
 from fastapi import Query,Body
-from yzcore.core.response import response
+from yzcore.response import response
 from yzcore.logger import get_logger
 from yzcore.exceptions import CreateObjectFailed, UpdateObjectFailed
 from .schemas import PermissionBase
