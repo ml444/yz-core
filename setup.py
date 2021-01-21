@@ -7,7 +7,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setuptools.setup(
     name="yzcore",  # Replace with your own username
-    version="0.0.10",
+    version="0.0.12",
     author="cml",
     author_email="fu477521@163.com",
     description="An ID generator for distributed microservices",
@@ -35,8 +35,7 @@ setuptools.setup(
     python_requires='>=3.6.8',
     install_requires=[
         "fastapi>=0.63",
-        "sqlalchemy>1.3",
         "uvicorn>0.13",
-        "orjson>=3.3.1"
+        # "orjson>=3.3.1"
     ]
 )
