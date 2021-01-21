@@ -24,7 +24,7 @@ class DefaultSetting(BaseSettings):
     API_V1_STR: str = "/api/v1"
     SECRET_KEY: str = get_random_secret_key()
 
-    DB_URI: str
+    DB_URI: str = None
 
 
 def get_settings():
