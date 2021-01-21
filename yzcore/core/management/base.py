@@ -3,11 +3,7 @@
 """
 @auth: cml
 @date: 2020-9-
-@desc: ...
-"""
-"""
-Base classes for writing management commands (named commands which can
-be executed through ``django-admin`` or ``manage.py``).
+@desc: 根据Django调用命令方式
 """
 import os
 import sys
@@ -16,32 +12,17 @@ from io import TextIOBase
 
 
 class CommandError(Exception):
-    """
-    Exception class indicating a problem while executing a management
-    command.
-
-    If this exception is raised during the execution of a management
-    command, it will be caught and turned into a nicely-printed error
-    message to the appropriate output stream (i.e., stderr); as a
-    result, raising this exception (with a sensible description of the
-    error) is the preferred way to indicate that something has gone
-    wrong in the execution of a command.
-    """
     pass
 
 
 class SystemCheckError(CommandError):
-    """
-    The system check framework detected unrecoverable errors.
-    """
     pass
 
 
 class CommandParser(ArgumentParser):
     """
-    Customized ArgumentParser class to improve some error messages and prevent
-    SystemExit in several occasions, as SystemExit is unacceptable when a
-    command is called programmatically.
+    定制的ArgumentParser类可改善某些错误消息，
+    并在多种情况下防止SystemExit，因为以调用时出现SystemExit是难以接受的。
     """
     def __init__(self, *, missing_args_message=None, called_from_command_line=None, **kwargs):
         self.missing_args_message = missing_args_message
@@ -60,29 +41,6 @@ class CommandParser(ArgumentParser):
             super().error(message)
         else:
             raise CommandError("Error: %s" % message)
-
-
-class DjangoHelpFormatter(HelpFormatter):
-    """
-    Customized formatter so that command-specific arguments appear in the
-    --help output before arguments common to all commands.
-    """
-    show_last = {
-        '--version', '--verbosity', '--traceback', '--settings', '--pythonpath',
-        '--no-color', '--force-color',
-    }
-
-    def _reordered_actions(self, actions):
-        return sorted(
-            actions,
-            key=lambda a: set(a.option_strings) & self.show_last != set()
-        )
-
-    def add_usage(self, usage, actions, *args, **kwargs):
-        super().add_usage(usage, self._reordered_actions(actions), *args, **kwargs)
-
-    def add_arguments(self, actions):
-        super().add_arguments(self._reordered_actions(actions))
 
 
 class OutputWrapper(TextIOBase):
@@ -120,73 +78,6 @@ class OutputWrapper(TextIOBase):
 
 
 class BaseCommand:
-    """
-    The base class from which all management commands ultimately
-    derive.
-
-    Use this class if you want access to all of the mechanisms which
-    parse the command-line arguments and work out what code to call in
-    response; if you don't need to change any of that behavior,
-    consider using one of the subclasses defined in this file.
-
-    If you are interested in overriding/customizing various aspects of
-    the command-parsing and -execution behavior, the normal flow works
-    as follows:
-
-    1. ``django-admin`` or ``manage.py`` loads the command class
-       and calls its ``run_from_argv()`` method.
-
-    2. The ``run_from_argv()`` method calls ``create_parser()`` to get
-       an ``ArgumentParser`` for the arguments, parses them, performs
-       any environment changes requested by options like
-       ``pythonpath``, and then calls the ``execute()`` method,
-       passing the parsed arguments.
-
-    3. The ``execute()`` method attempts to carry out the command by
-       calling the ``handle()`` method with the parsed arguments; any
-       output produced by ``handle()`` will be printed to standard
-       output and, if the command is intended to produce a block of
-       SQL statements, will be wrapped in ``BEGIN`` and ``COMMIT``.
-
-    4. If ``handle()`` or ``execute()`` raised any exception (e.g.
-       ``CommandError``), ``run_from_argv()`` will  instead print an error
-       message to ``stderr``.
-
-    Thus, the ``handle()`` method is typically the starting point for
-    subclasses; many built-in commands and command types either place
-    all of their logic in ``handle()``, or perform some additional
-    parsing work in ``handle()`` and then delegate from it to more
-    specialized methods as needed.
-
-    Several attributes affect behavior at various steps along the way:
-
-    ``help``
-        A short description of the command, which will be printed in
-        help messages.
-
-    ``output_transaction``
-        A boolean indicating whether the command outputs SQL
-        statements; if ``True``, the output will automatically be
-        wrapped with ``BEGIN;`` and ``COMMIT;``. Default value is
-        ``False``.
-
-    ``requires_migrations_checks``
-        A boolean; if ``True``, the command prints a warning if the set of
-        migrations on disk don't match the migrations in the database.
-
-    ``requires_system_checks``
-        A boolean; if ``True``, entire Django project will be checked for errors
-        prior to executing the command. Default value is ``True``.
-        To validate an individual application's models
-        rather than all applications' models, call
-        ``self.check(app_configs)`` from ``handle()``, where ``app_configs``
-        is the list of application's configuration provided by the
-        app registry.
-
-    ``stealth_options``
-        A tuple of any options the command uses which aren't defined by the
-        argument parser.
-    """
     # Metadata about this command.
     help = ''
     _called_from_command_line = False
@@ -210,7 +101,7 @@ class BaseCommand:
         parser = CommandParser(
             prog='%s %s' % (os.path.basename(prog_name), subcommand),
             description=self.help or None,
-            formatter_class=DjangoHelpFormatter,
+            formatter_class=HelpFormatter,
             missing_args_message=getattr(self, 'missing_args_message', None),
             called_from_command_line=getattr(self, '_called_from_command_line', None),
             **kwargs

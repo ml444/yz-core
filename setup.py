@@ -7,7 +7,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setuptools.setup(
     name="yzcore",  # Replace with your own username
-    version="0.0.9",
+    version="0.0.10",
     author="cml",
     author_email="fu477521@163.com",
     description="An ID generator for distributed microservices",
