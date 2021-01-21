@@ -12,7 +12,7 @@ try:
 except:
     yaml = None
 
-from pydantic import BaseSettings
+from pydantic import BaseSettings, AnyUrl
 from yzcore.utils import get_random_secret_key
 
 
@@ -25,6 +25,8 @@ class DefaultSetting(BaseSettings):
     SECRET_KEY: str = get_random_secret_key()
 
     DB_URI: str = None
+    ID_URL: AnyUrl = None
+
 
 
 def get_settings():
@@ -85,3 +87,4 @@ def get_ini_section_to_dict(
 
 if __name__ == '__main__':
     conf = get_configer("ini")
+
