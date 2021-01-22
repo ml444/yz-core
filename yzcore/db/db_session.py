@@ -25,8 +25,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
-from yzcore.default_settings import get_settings
-settings = get_settings()
+from yzcore.default_settings import default_setting as settings
 
 
 def get_db_engine():

@@ -17,6 +17,13 @@ from yzcore.utils import get_random_secret_key
 
 
 class DefaultSetting(BaseSettings):
+    __cml__ = {}
+
+    def __init_subclass__(cls, **kwargs):
+        """"""
+        super().__init_subclass__()
+        reload_reload_settings(cls())
+
     class Config:
         case_sensitive = False  # 是否区分大小写
 
@@ -26,17 +33,20 @@ class DefaultSetting(BaseSettings):
 
     DB_URI: str = None
     ID_URL: AnyUrl = None
+    GENERATE_UUID_PATH: str = '/uuid/generate/'
+    EXPLAIN_UUID_PATH: str = '/uuid/explain/'
+    TRANSLATE_PATH: str = '/uuid/translate/'
+    MAKE_UUID_PATH: str = '/uuid/make/'
 
 
+default_setting = DefaultSetting()
 
-def get_settings():
-    try:
-        from ..settings import Settings
-    except:
-        Settings = DefaultSetting
 
-    settings = Settings()
-    return settings
+def reload_reload_settings(instance):
+    settings = default_setting
+    for k, v in settings.__fields__.items():
+        val = getattr(instance, k)
+        setattr(settings, k, val)
 
 
 def get_configer(ext: str = "ini", import_path=os.curdir):
