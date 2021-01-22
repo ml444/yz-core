@@ -46,7 +46,7 @@ def datetime2timestamp(date_time: datetime):
 
 def timestamp2datetime(time_stamp: int):
     _s = str(time_stamp)
-    if len(_s) > 10:
+    if len(_s) > 10 and '.' not in _s:
         _s = '.'.join((_s[:10], _s[10:]))
         time_stamp = float(_s)
     return datetime.datetime.fromtimestamp(time_stamp)
