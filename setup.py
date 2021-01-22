@@ -7,13 +7,13 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setuptools.setup(
     name="yzcore",  # Replace with your own username
-    version="0.0.12",
+    version="0.0.13",
     author="cml",
-    author_email="fu477521@163.com",
+    author_email="caimengli@.com",
     description="An ID generator for distributed microservices",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/fu477521/yzcore.git",
+    url="https://github.com/realibox/yzcore.git",
     packages=setuptools.find_packages(),
     package_data={'yzcore': [
         'templates/project_template/*',
