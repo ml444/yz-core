@@ -136,6 +136,7 @@ class AioHTTP:
         :param is_close_sesion: 是否关闭Session
         :return:
         """
+        await asyncio.sleep(0)
         client_session = cls.get_session()
         __request = getattr(client_session, method.lower())
         async with cls.semaphore:
@@ -149,7 +150,10 @@ class AioHTTP:
                         timeout=timeout,
                         **kwargs
                 ) as response:
-                    result = await response.json()
+                    if response.content_type == 'application/json':
+                        result = await response.json()
+                    else:
+                        result = await response.text()
             except Exception as e:
                 import traceback
                 traceback.print_exc()
