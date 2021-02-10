@@ -93,7 +93,7 @@ class OrmCRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         :return:
         """
         if sort:
-            sort = [text(s) for s in sort]
+            sort = text(','.join(sort))
         if kwargs:
             return db.query(self.model).filter_by(
                 **kwargs).order_by(sort).offset(offset).limit(limit).all()

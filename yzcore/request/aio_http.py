@@ -139,6 +139,9 @@ class AioHTTP:
         await asyncio.sleep(0)
         client_session = cls.get_session()
         __request = getattr(client_session, method.lower())
+        if params:
+            params = {key: value for key, value in params.items() if
+                      value is not None}
         async with cls.semaphore:
             try:
                 async with __request(
