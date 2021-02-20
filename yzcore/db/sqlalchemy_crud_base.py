@@ -189,7 +189,7 @@ class OrmCRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
                 db.add(obj)
                 if not is_transaction:
                     db.commit()
-                db.refresh(obj)
+                    db.refresh(obj)
                 return obj
 
     def delete(
