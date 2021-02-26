@@ -26,10 +26,11 @@ import hmac
 import datetime
 import hashlib
 import urllib
+from enum import Enum
 try:
     import oss2
 except:
-    pass
+    oss2 = None
 
 __all__ = [
     "OssManager", "OssManagerError"
@@ -43,29 +44,55 @@ IMAGE_FORMAT_SET = [
 OssManagerError = type("OssManagerError", (ValueError,), {})
 
 
+# class ACL(Enum):
+#     private = oss2.BUCKET_ACL_PRIVATE
+#     onlyread = oss2.BUCKET_ACL_PUBLIC_READ
+#     readwrite = oss2.BUCKET_ACL_PUBLIC_READ_WRITE
+
+
 class OssManager(object):
     """
     使用示例:
         >>> from . import OssManager
         >>> oss_conf = dict(
-        ...     access_key_id="LTAIpU4LFStTy95Q",
-        ...     access_key_secret="Cep4MBhQpeB8cSNpv6w5nD8OMhOSUA",
+        ...     access_key_id="LTAIxxxxxxxxxxx",
+        ...     access_key_secret="Cep4Mxxxxxxxxxxxxxxxxxxxx",
         ...     endpoint="oss-cn-shenzhen.aliyuncs.com",
         ...     # endpoint="oss-cn-shenzhen-internal.aliyuncs.com",
-        ...     bucket_name="realicloud-local",
-        ...     cache_path="/tmp/realicloud/fm/cache"
+        ...     bucket_name="xxxx-local",
+        ...     cache_path="/tmp/xxxx/fm/cache"
         ... )
 
         >>> oss = OssManager(**oss_conf)
         >>> oss.upload("/home/zhangw/Work/模型文件/狼.fbx", "test/狗.fbx")
         >>> oss.download("test/狗.fbx")
     """
+
+    acl_type = {
+        "private": oss2.BUCKET_ACL_PRIVATE,
+        "onlyread": oss2.BUCKET_ACL_PUBLIC_READ,
+        "readwrite": oss2.BUCKET_ACL_PUBLIC_READ_WRITE,
+    }
+    # 存储类型
+    storage_cls = {
+        "standard": oss2.BUCKET_STORAGE_CLASS_STANDARD,          # 标准类型
+        "ia": oss2.BUCKET_STORAGE_CLASS_IA,                      # 低频访问类型
+        "archive": oss2.BUCKET_STORAGE_CLASS_ARCHIVE,            # 归档类型
+        "cold_archive": oss2.BUCKET_STORAGE_CLASS_COLD_ARCHIVE,  # 冷归档类型
+    }
+    # 冗余类型
+    redundancy_type = {
+        "lrs": oss2.BUCKET_DATA_REDUNDANCY_TYPE_LRS,    # 本地冗余
+        "zrs": oss2.BUCKET_DATA_REDUNDANCY_TYPE_ZRS,    # 同城冗余（跨机房）
+    }
+
     def __init__(
             self,
             access_key_id,
             access_key_secret,
-            endpoint,
             bucket_name,
+            endpoint=None,
+            cname=None,
             cache_path='.',
             expire_time=30,
             **kwargs
@@ -81,16 +108,27 @@ class OssManager(object):
         self.asset_domain = kwargs.get("asset_domain")
         self.policy_expire_time = kwargs.get("policy_expire_time", expire_time)
 
+        self.cname = cname
+
         self.bucket = None
         self.__init()
 
-    def __init(self):
+    def __init(self, bucket_name=None):
         """初始化对象"""
-        assert oss2 is not None, "'oss2' must be installed to use OssManager"
-        oss_auth = oss2.Auth(self.access_key_id, self.access_key_secret)
+        if oss2 is None:
+            raise ImportError("'oss2' must be installed to use OssManager")
+        if not any((self.endpoint, self.cname)):
+            raise AttributeError(
+                "One of 'endpoint' and 'cname' must not be None.")
 
+        self.auth = oss2.Auth(self.access_key_id, self.access_key_secret)
+
+        # 如果cname存在，则使用自定义域名初始化
+        self.endpoint = self.cname if self.cname else self.endpoint
+        is_cname = True if self.cname else False
+        self.bucket_name = bucket_name if bucket_name else self.bucket_name
         self.bucket = oss2.Bucket(
-            oss_auth, self.endpoint, self.bucket_name
+            self.auth, self.endpoint, self.bucket_name, is_cname=is_cname
         )
 
         if self.cache_path:
@@ -107,6 +145,88 @@ class OssManager(object):
         self.bucket_name = kwargs.get("bucket_name")
         self.endpoint = kwargs.get("endpoint")
         self.__init()
+
+    def create_bucket(self, bucket_name=None,
+                      acl_type='private',
+                      storage_type='standard',
+                      redundancy_type='zrs'):
+        self.__init(bucket_name=bucket_name)
+        permission = self.acl_type.get(acl_type)
+        config = oss2.models.BucketCreateConfig(
+            storage_class=self.storage_cls.get(storage_type),
+            data_redundancy_type=self.redundancy_type.get(redundancy_type)
+        )
+        return self.bucket.create_bucket(permission, input=config)
+
+    def iter_buckets(self, prefix='', marker='', max_keys=100, max_retries=None):
+        """
+        :param prefix: 只列举匹配该前缀的Bucket
+        :param marker: 分页符。只列举Bucket名字典序在此之后的Bucket
+        :param max_keys: 每次调用 `list_buckets` 时的max_keys参数。注意迭代器返回的数目可能会大于该值。
+        :param max_retries:
+        :return:
+        """
+        if not hasattr(self, 'service'):
+            self.service = oss2.Service(self.auth, self.endpoint)
+
+        return oss2.BucketIterator(
+            self.service, prefix=prefix, marker=marker,
+            max_keys=max_keys, max_retries=max_retries)
+
+    def list_buckets(self, prefix='', marker='', max_keys=100, params=None):
+        """根据前缀罗列用户的Bucket。
+
+        :param str prefix: 只罗列Bucket名为该前缀的Bucket，空串表示罗列所有的Bucket
+        :param str marker: 分页标志。首次调用传空串，后续使用返回值中的next_marker
+        :param int max_keys: 每次调用最多返回的Bucket数目
+        :param dict params: list操作参数，传入'tag-key','tag-value'对结果进行过滤
+
+        :return: 罗列的结果
+        :rtype: oss2.models.ListBucketsResult
+        """
+        if not hasattr(self, 'service'):
+            self.service = oss2.Service(self.auth, self.endpoint)
+        return self.service.list_buckets(
+            prefix=prefix, marker=marker, max_keys=max_keys, params=params)
+
+    def is_exist_bucket(self):
+        """判断存储空间是否存在"""
+        try:
+            self.bucket.get_bucket_info()
+        except oss2.exceptions.NoSuchBucket:
+            return False
+        except:
+            raise
+        return True
+
+    def encrypt_bucket(self):
+        """加密bucket"""
+        # 创建Bucket加密配置，以AES256加密为例。
+        rule = oss2.models.ServerSideEncryptionRule()
+        rule.sse_algorithm = oss2.SERVER_SIDE_ENCRYPTION_AES256
+        # 设置KMS密钥ID，加密方式为KMS可设置此项。
+        # 如需使用指定的密钥加密，需输入指定的CMK ID；
+        # 若使用OSS托管的CMK进行加密，此项为空。使用AES256进行加密时，此项必须为空。
+        rule.kms_master_keyid = ""
+
+        # 设置Bucket加密。
+        result = self.bucket.put_bucket_encryption(rule)
+        # 查看HTTP返回码。
+        print('http response code:', result.status)
+        return result
+
+    def delete_encrypt_bucket(self):
+        # 删除Bucket加密配置。
+        result = self.bucket.delete_bucket_encryption()
+        # 查看HTTP返回码。
+        print('http status:', result.status)
+        return result
+
+    def get_sign_url(self, key, expire=10):
+        return self.bucket.sign_url("GET", key, expire)
+
+    def post_sign_url(self, key, expire=10):
+        return self.bucket.sign_url("POST", key, expire)
 
     def delete_cache_file(self, filename):
         """删除文件缓存"""
