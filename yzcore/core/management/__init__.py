@@ -268,5 +268,11 @@ class ManagementUtility:
 
 def execute_from_command_line(argv=None):
     """Run a ManagementUtility."""
-    utility = ManagementUtility(argv)
-    utility.execute()
+    # utility = ManagementUtility(argv)
+    # utility.execute()
+    from yzrpc.commands import CommandUtility
+    utility = CommandUtility(
+        command_dir="/Users/edz/cmlpy/yz-core/yzcore/core/management/commands",
+        module_path="yzcore.core.management.commands"
+    )
+    utility.run_from_argv(argv)
