@@ -26,29 +26,29 @@ import hmac
 import datetime
 import hashlib
 import urllib
-import warnings
-# from enum import Enum
+from enum import Enum
 try:
     import oss2
 except:
     oss2 = None
 
+from . import OssManagerBase
+
 __all__ = [
     "OssManager", "OssManagerError"
 ]
-IMAGE_FORMAT_SET = [
-    'bmp', 'jpg', 'jpeg', 'png', 'tif', 'gif', 'pcx', 'tga',
-    'exif', 'fpx', 'svg', 'psd', 'cdr', 'pcd', 'dxf', 'ufo',
-    'eps', 'ai', 'raw', 'WMF', 'webp', 'tiff'
-]
+
 
 OssManagerError = type("OssManagerError", (ValueError,), {})
 
 
-warnings.warn('The aliyun_oss module is deprecated',
-              category=DeprecationWarning, stacklevel=2)
+# class ACL(Enum):
+#     private = oss2.BUCKET_ACL_PRIVATE
+#     onlyread = oss2.BUCKET_ACL_PUBLIC_READ
+#     readwrite = oss2.BUCKET_ACL_PUBLIC_READ_WRITE
 
-class OssManager(object):
+
+class OssManager(OssManagerBase):
     """
     使用示例:
         >>> from . import OssManager
@@ -84,36 +84,11 @@ class OssManager(object):
         "zrs": oss2.BUCKET_DATA_REDUNDANCY_TYPE_ZRS,    # 同城冗余（跨机房）
     }
 
-    def __init__(
-            self,
-            access_key_id,
-            access_key_secret,
-            bucket_name,
-            endpoint=None,
-            cname=None,
-            cache_path='.',
-            expire_time=30,
-            **kwargs
-    ):
-        self.access_key_id = access_key_id
-        self.access_key_secret = access_key_secret
-        self.bucket_name = bucket_name
-        self.endpoint = endpoint
-
-        self.cache_path = cache_path
-        self.scheme = kwargs.get("scheme", "https")
-        self.image_domain = kwargs.get("image_domain")
-        self.asset_domain = kwargs.get("asset_domain")
-        self.policy_expire_time = kwargs.get("policy_expire_time", expire_time)
-
-        self.cname = cname
-
-        self.bucket = None
-        self.__init()
+    def __init__(self, *args, **kwargs):
+        super(OssManager, self).__init__(*args, **kwargs)
 
     def __init(self, bucket_name=None):
         """初始化对象"""
-
         if oss2 is None:
             raise ImportError("'oss2' must be installed to use OssManager")
         if not any((self.endpoint, self.cname)):
@@ -210,28 +185,28 @@ class OssManager(object):
             import traceback
             print(traceback.format_exc())
 
-    def encrypt_bucket(self):
-        """加密bucket"""
-        # 创建Bucket加密配置，以AES256加密为例。
-        rule = oss2.models.ServerSideEncryptionRule()
-        rule.sse_algorithm = oss2.SERVER_SIDE_ENCRYPTION_AES256
-        # 设置KMS密钥ID，加密方式为KMS可设置此项。
-        # 如需使用指定的密钥加密，需输入指定的CMK ID；
-        # 若使用OSS托管的CMK进行加密，此项为空。使用AES256进行加密时，此项必须为空。
-        rule.kms_master_keyid = ""
-
-        # 设置Bucket加密。
-        result = self.bucket.put_bucket_encryption(rule)
-        # 查看HTTP返回码。
-        print('http response code:', result.status)
-        return result
-
-    def delete_encrypt_bucket(self):
-        # 删除Bucket加密配置。
-        result = self.bucket.delete_bucket_encryption()
-        # 查看HTTP返回码。
-        print('http status:', result.status)
-        return result
+    # def encrypt_bucket(self):
+    #     """设置Bucket加密"""
+    #     # 创建Bucket加密配置，以AES256加密为例。
+    #     rule = oss2.models.ServerSideEncryptionRule()
+    #     rule.sse_algorithm = oss2.SERVER_SIDE_ENCRYPTION_AES256
+    #     # 设置KMS密钥ID，加密方式为KMS可设置此项。
+    #     # 如需使用指定的密钥加密，需输入指定的CMK ID；
+    #     # 若使用OSS托管的CMK进行加密，此项为空。使用AES256进行加密时，此项必须为空。
+    #     rule.kms_master_keyid = ""
+    #
+    #     # 设置Bucket加密。
+    #     result = self.bucket.put_bucket_encryption(rule)
+    #     # 查看HTTP返回码。
+    #     print('http response code:', result.status)
+    #     return result
+    #
+    # def delete_encrypt_bucket(self):
+    #     # 删除Bucket加密配置。
+    #     result = self.bucket.delete_bucket_encryption()
+    #     # 查看HTTP返回码。
+    #     print('http status:', result.status)
+    #     return result
 
     def get_sign_url(self, key, expire=10):
         return self.bucket.sign_url("GET", key, expire)
@@ -239,31 +214,18 @@ class OssManager(object):
     def post_sign_url(self, key, expire=10):
         return self.bucket.sign_url("POST", key, expire)
 
-    def delete_cache_file(self, filename):
-        """删除文件缓存"""
-        filepath = os.path.abspath(os.path.join(self.cache_path, filename))
-        assert os.path.isfile(filepath), '非文件或文件不存在'
-        os.remove(filepath)
-
-    def search_cache_file(self, filename):
-        """文件缓存搜索"""
-        # 拼接绝对路径
-        filepath = os.path.abspath(os.path.join(self.cache_path, filename))
-        if os.path.isfile(filepath):
-            return filepath
-        else:
-            return None
-
-    def download(self, key, local_name=None, process=None, is_stream=False):
+    def download(self, key, local_name=None,
+                 is_return_obj=False,
+                 progress_callback=None, process=None):
         """
         下载oss文件
 
         :param key:
         :param local_name:
         :param process:
-        :param is_stream:
+        :param load_stream_in_memory:
             is_stream = True:
-                >>> result = self.download('readme.txt', is_stream=True)
+                >>> result = self.download('readme.txt', load_stream_in_memory=True)
                 >>> print(result.read())
                 'hello world'
             is_stream = False:
@@ -277,7 +239,7 @@ class OssManager(object):
                 os.path.join(self.cache_path, key)
             )
         make_dir(os.path.dirname(local_name))
-        if is_stream:
+        if is_return_obj:
             return self.bucket.get_object(key, process=process)
         else:
             self.bucket.get_object_to_file(key, local_name, process=process)
@@ -299,92 +261,86 @@ class OssManager(object):
         )
         # 返回下载链接
         if not any((self.image_domain, self.asset_domain)):
-            return result.resp.response.url
-        return self.get_file_url(filepath, key)
+            return True, result.resp.response.url
+        return True, self.get_file_url(filepath, key)
 
-    def get_policy(
-            self,
-            filepath,
-            callback_url,
-            callback_data=None,
-            callback_content_type="application/json"):
-        """
-        授权给第三方上传
-
-        :param filepath:
-        :param callback_url:
-        :param callback_data: 需要回传的参数
-        :param callback_content_type: 回调时的Content-Type
-               "application/json"
-               "application/x-www-form-urlencoded"
-
-        :return:
-        """
-        params = urllib.parse.urlencode(
-            dict(data=json.dumps(callback_data)))
-        policy_encode = self._get_policy_encode(filepath)
-        sign = self.get_signature(policy_encode)
-
-        callback_dict = dict()
-        callback_dict["callbackUrl"] = callback_url
-        callback_dict["callbackBody"] = (
-            "filepath=${object}&size=${size}&mime_type=${mimeType}"
-            "&img_height=${imageInfo.height}&img_width=${imageInfo.width}"
-            "&img_format=${imageInfo.format}&" + params
-        )
-        callback_dict["callbackBodyType"] = callback_content_type
-
-        callback_param = json.dumps(callback_dict).strip().encode()
-        base64_callback_body = base64.b64encode(callback_param)
-
-        return dict(
-            accessid=self.access_key_id,
-            host=f"{self.scheme}://{self.bucket_name}.{self.endpoint}",
-            policy=policy_encode.decode(),
-            signature=sign,
-            dir=filepath,
-            callback=base64_callback_body.decode(),
-        )
-
-    def _get_policy_encode(self, filepath):
-        expire_time = datetime.datetime.now() + datetime.timedelta(
-            seconds=self.policy_expire_time
-        )
-        policy_dict = dict(
-            expiration=expire_time.isoformat() + "Z",
-            conditions=[
-                ["starts-with", "$key", filepath],                    # 指定值开始
-                # ["eq", "$success_action_redirect", "public-read"],  # 精确匹配
-                # ["content-length-range", 1, 1024*1024*1024]         # 对象大小限制
-            ],
-        )
-        policy = json.dumps(policy_dict).strip().encode()
-        return base64.b64encode(policy)
-
-    def get_signature(self, policy_encode):
-        """
-        获取签名
-
-        :param policy_encode:
-        :return:
-        """
-        h = hmac.new(
-            self.access_key_secret.encode("utf-8"), policy_encode, hashlib.sha1
-        )
-        sign_result = base64.encodebytes(h.digest()).strip()
-        return sign_result.decode()
-
-    def get_file_url(self, filepath, key):
-        if filepath.split('.')[-1] in IMAGE_FORMAT_SET:
-            resource_url = u"//{domain}/{key}".format(
-                domain=self.image_domain, key=key)
-        else:
-            resource_url = u"//{domain}/{key}".format(
-                domain=self.asset_domain, key=key)
-        return resource_url
+    # def get_policy(
+    #         self,
+    #         filepath,
+    #         callback_url,
+    #         callback_data=None,
+    #         callback_content_type="application/json"):
+    #     """
+    #     授权给第三方上传
+    #
+    #     :param filepath:
+    #     :param callback_url:
+    #     :param callback_data: 需要回传的参数
+    #     :param callback_content_type: 回调时的Content-Type
+    #            "application/json"
+    #            "application/x-www-form-urlencoded"
+    #
+    #     :return:
+    #     """
+    #     params = urllib.parse.urlencode(
+    #         dict(data=json.dumps(callback_data)))
+    #     policy_encode = self._get_policy_encode(filepath)
+    #     sign = self.get_signature(policy_encode)
+    #
+    #     callback_dict = dict()
+    #     callback_dict["callbackUrl"] = callback_url
+    #     callback_dict["callbackBody"] = (
+    #         "filepath=${object}&size=${size}&mime_type=${mimeType}"
+    #         "&img_height=${imageInfo.height}&img_width=${imageInfo.width}"
+    #         "&img_format=${imageInfo.format}&" + params
+    #     )
+    #     callback_dict["callbackBodyType"] = callback_content_type
+    #
+    #     callback_param = json.dumps(callback_dict).strip().encode()
+    #     base64_callback_body = base64.b64encode(callback_param)
+    #
+    #     return dict(
+    #         accessid=self.access_key_id,
+    #         host=f"{self.scheme}://{self.bucket_name}.{self.endpoint}",
+    #         policy=policy_encode.decode(),
+    #         signature=sign,
+    #         dir=filepath,
+    #         callback=base64_callback_body.decode(),
+    #     )
+    #
+    # def _get_policy_encode(self, filepath):
+    #     expire_time = datetime.datetime.now() + datetime.timedelta(
+    #         seconds=self.policy_expire_time
+    #     )
+    #     policy_dict = dict(
+    #         expiration=expire_time.isoformat() + "Z",
+    #         conditions=[
+    #             ["starts-with", "$key", filepath],                    # 指定值开始
+    #             # ["eq", "$success_action_redirect", "public-read"],  # 精确匹配
+    #             # ["content-length-range", 1, 1024*1024*1024]         # 对象大小限制
+    #         ],
+    #     )
+    #     policy = json.dumps(policy_dict).strip().encode()
+    #     return base64.b64encode(policy)
+    #
+    # def get_signature(self, policy_encode):
+    #     """
+    #     获取签名
+    #
+    #     :param policy_encode:
+    #     :return:
+    #     """
+    #     h = hmac.new(
+    #         self.access_key_secret.encode("utf-8"), policy_encode, hashlib.sha1
+    #     )
+    #     sign_result = base64.encodebytes(h.digest()).strip()
+    #     return sign_result.decode()
 
     def update_file_headers(self, key, headers):
         self.bucket.update_object_meta(key, headers)
+
+
+
 
 
 def make_dir(dir_path):
