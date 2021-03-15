@@ -14,7 +14,7 @@ def data_md5(data) -> str:
     对传入的数据进行MD5
 
     :param data:
-    :return:
+    :return: d41d8cd98f00b204e9800998ecf8427e (空)
     """
     if not isinstance(data, bytes):
         if not isinstance(data, str):
