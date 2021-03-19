@@ -155,6 +155,8 @@ class AioHTTP:
                 ) as response:
                     if response.content_type == 'application/json':
                         result = await response.json()
+                    elif response.content_type == 'application/octet=stream':
+                        result = await response.read()
                     else:
                         result = await response.text()
             except Exception as e:
