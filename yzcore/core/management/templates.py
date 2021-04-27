@@ -6,20 +6,12 @@ from importlib import import_module
 from os import path
 
 import yzcore
-from .base import BaseCommand, CommandError
+from .base import CommandError
+from yzrpc.commands import CommandBase
 
 
-class TemplateCommand(BaseCommand):
-    """
-    Copy either a Django application layout template or a Django project
-    layout template into the specified directory.
+class TemplateCommand(CommandBase):
 
-    :param style: A color style object (see django.core.management.color).
-    :param app_or_project: The string 'app' or 'project'.
-    :param name: The name of the application or project.
-    :param directory: The directory to which the template should be copied.
-    :param options: The additional variables passed to project or app templates
-    """
     requires_system_checks = False
     # The supported URL schemes
     url_schemes = ['http', 'https', 'ftp']
@@ -33,19 +25,6 @@ class TemplateCommand(BaseCommand):
         parser.add_argument('name', help='Name of the application or project.')
         parser.add_argument('directory', nargs='?', help='Optional destination directory')
         # parser.add_argument('--template', help='The path or URL to load the template from.')
-        # parser.add_argument(
-        #     '--extension', '-e', dest='extensions',
-        #     action='append', default=['py'],
-        #     help='The file extension(s) to render (default: "py"). '
-        #          'Separate multiple extensions with commas, or use '
-        #          '-e multiple times.'
-        # )
-        # parser.add_argument(
-        #     '--name', '-n', dest='files',
-        #     action='append', default=[],
-        #     help='The file name(s) to render. Separate multiple file names '
-        #          'with commas, or use -n multiple times.'
-        # )
 
     def handle(self, app_or_project, name, target=None, **options):
         """
@@ -143,30 +122,6 @@ class TemplateCommand(BaseCommand):
                 an=a_or_an,
                 app=app_or_project,
             ))
-        # # Check it's a valid directory name.
-        # if not name.isidentifier():
-        #     raise CommandError(
-        #         "'{name}' is not a valid {app} name. Please make sure the "
-        #         "name is a valid identifier.".format(
-        #             name=name,
-        #             app=app_or_project,
-        #         )
-        #     )
-        # # Check it cannot be imported.
-        # try:
-        #     import_module(name)
-        # except ImportError:
-        #     pass
-        # else:
-        #     raise CommandError(
-        #         "'{name}' conflicts with the name of an existing Python "
-        #         "module and cannot be used as {an} {app} name. Please try "
-        #         "another name.".format(
-        #             name=name,
-        #             an=a_or_an,
-        #             app=app_or_project,
-        #         )
-        #     )
 
     def make_writeable(self, filename):
         """

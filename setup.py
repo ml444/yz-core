@@ -7,9 +7,9 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setuptools.setup(
     name="yzcore",  # Replace with your own username
-    version="0.0.17",
+    version="0.1.0",
     author="cml",
-    # author_email="caimengli@.com",
+    author_email="caimengli0660@gmail.com",
     description="An ID generator for distributed microservices",
     long_description=long_description,
     long_description_content_type="text/markdown",
@@ -37,5 +37,16 @@ setuptools.setup(
         "fastapi>=0.63",
         "uvicorn>0.13",
         # "orjson>=3.3.1"
-    ]
+    ],
+    entry_points={
+        'console_scripts': [
+            'yzcore=yzcore.__main__:main'
+        ],
+    },
+    extras_require={
+        'rpc': ['yzrpc>=0.1'],
+        'oss-aliyun': ['oss2>=2.13.0, !=3.0.0'],
+        'oss-huawei': ['esdk-obs-python==3.20.11'],
+        'oss-aws': ['boto3==1.17.27'],
+    }
 )

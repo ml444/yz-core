@@ -271,8 +271,11 @@ def execute_from_command_line(argv=None):
     # utility = ManagementUtility(argv)
     # utility.execute()
     from yzrpc.commands import CommandUtility
-    utility = CommandUtility(
-        command_dir="/Users/edz/cmlpy/yz-core/yzcore/core/management/commands",
-        module_path="yzcore.core.management.commands"
-    )
+    if argv[0] == 'yzrpc':
+        utility = CommandUtility()
+    else:
+        utility = CommandUtility(
+            command_dir=os.path.join(os.path.dirname(__file__), "commands"),
+            module_path="yzcore.core.management.commands"
+        )
     utility.run_from_argv(argv)

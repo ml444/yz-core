@@ -76,7 +76,7 @@ class OutputWrapper(TextIOBase):
         style_func = style_func or self.style_func
         self._out.write(style_func(msg))
 
-
+import textwrap
 class BaseCommand:
     # Metadata about this command.
     help = ''
