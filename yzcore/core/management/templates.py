@@ -2,11 +2,10 @@
 import os
 import shutil
 import stat
-from importlib import import_module
 from os import path
 
 import yzcore
-from .base import CommandError
+from . import CommandError
 from yzrpc.commands import CommandBase
 
 
