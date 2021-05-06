@@ -136,7 +136,7 @@ class AioHTTP:
         :param is_close_sesion: 是否关闭Session
         :return:
         """
-        await asyncio.sleep(0)
+        await asyncio.sleep(.1)
         client_session = cls.get_session()
         __request = getattr(client_session, method.lower())
         if params:
@@ -155,10 +155,12 @@ class AioHTTP:
                 ) as response:
                     if response.content_type == 'application/json':
                         result = await response.json()
-                    elif response.content_type == 'application/octet=stream':
-                        result = await response.read()
-                    else:
+                    elif response.content_type == 'text/plain':
                         result = await response.text()
+#                     elif response.content_type == 'application/octet=stream':
+#                         result = await response.read()
+                    else:
+                        result = await response.read()
             except Exception as e:
                 import traceback
                 traceback.print_exc()

@@ -145,7 +145,7 @@ class MongoCRUDBase(Generic[CreateSchemaType, UpdateSchemaType]):
         :return:
         """
         if is_logical_del:
-            update = {"$set": {"isDelete": False}}
+            update = {"$set": {"isDelete": True}}
             if not is_many:
                 result = self.collection.update_one(filter=opt, update=update)
             else:
