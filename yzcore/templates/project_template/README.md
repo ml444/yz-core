@@ -13,11 +13,11 @@ $ pip install yzcore
 示例：
 - 创建工程：
 ```shell
-$ python3 -m yzcore startproject myproject
+$ yzcore startproject myproject
 ```
 - 创建工程内部应用：
 ```shell
-$ python3 -m yzcore startapp myapp ./src/apps/
+$ yzcore startapp myapp ./src/apps/
 ```
 
 代码结构介绍：
